@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cipher — Encrypt anything, right in your browser</title>
+<meta name="description" content="Static AES-256 text encryption. 100% in-browser — your words never leave your device.">
+<style>
+  :root { --bg: #0b0e14; --card: #131722; --line: #232a3a; --txt: #e8ecf4; --dim: #8b94a7; --acc: #6ee7a0; --acc2: #7cc7ff; --warn: #ffb86b; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--txt); font-family: -apple-system, "Segoe UI", Inter, Roboto, sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 32px 16px 48px; }
+  .wrap { width: 100%; max-width: 640px; }
+  header { text-align: center; margin-bottom: 28px; }
+  header h1 { font-size: 2rem; letter-spacing: -0.5px; }
+  header h1 span { color: var(--acc); }
+  header p { color: var(--dim); margin-top: 8px; font-size: 0.95rem; }
+  .badge { display: inline-block; margin-top: 12px; font-size: 0.75rem; color: var(--acc); border: 1px solid var(--acc); border-radius: 999px; padding: 4px 12px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tab { flex: 1; padding: 12px; text-align: center; background: var(--card); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; color: var(--dim); font-weight: 600; transition: all .15s; }
+  .tab.active { color: var(--txt); border-color: var(--acc); background: #17202e; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  label { display: block; font-size: 0.8rem; color: var(--dim); margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.6px; }
+  label:first-child { margin-top: 0; }
+  textarea, input[type=password], input[type=text] { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; color: var(--txt); padding: 12px; font-size: 0.95rem; font-family: inherit; resize: vertical; }
+  textarea:focus, input:focus { outline: none; border-color: var(--acc); }
+  .pwrow { position: relative; }
+  .pwrow button { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--dim); cursor: pointer; font-size: 0.8rem; }
+  .btn { width: 100%; margin-top: 18px; padding: 14px; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; background: linear-gradient(135deg, var(--acc), var(--acc2)); color: #06110b; transition: transform .1s; }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.5; cursor: wait; }
+  .out { margin-top: 16px; display: none; }
+  .out.show { display: block; }
+  .out textarea { min-height: 110px; font-family: ui-monospace, monospace; font-size: 0.82rem; }
+  .copybtn { margin-top: 8px; width: 100%; padding: 10px; background: transparent; border: 1px solid var(--acc); color: var(--acc); border-radius: 10px; cursor: pointer; font-weight: 600; }
+  .msg { margin-top: 12px; font-size: 0.88rem; min-height: 1.2em; text-align: center; }
+  .msg.err { color: #ff7b7b; } .msg.ok { color: var(--acc); }
+  footer { margin-top: 28px; text-align: center; color: var(--dim); font-size: 0.8rem; line-height: 1.7; max-width: 520px; }
+  footer code { color: var(--acc2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span>◈</span> Cipher</h1>
+    <p>Encrypt text with a password. Decrypt it later. Simple.</p>
+    <div class="badge">100% in-browser · nothing leaves your device</div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-enc" onclick="switchTab('enc')">🔒 Encrypt</div>
+    <div class="tab" id="tab-dec" onclick="switchTab('dec')">🔓 Decrypt</div>
+  </div>
+
+  <div class="card" id="pane-enc">
+    <label>Your text</label>
+    <textarea id="enc-in" rows="4" placeholder="Type or paste the secret…"></textarea>
+    <label>Password</label>
+    <div class="pwrow">
+      <input type="password" id="enc-pw" placeholder="Choose a strong password">
+      <button onclick="togglePw('enc-pw', this)">show</button>
+    </div>
+    <button class="btn" id="enc-btn" onclick="doEncrypt()">Encrypt →</button>
+    <div class="out" id="enc-out">
+      <label>Encrypted — share or store this</label>
+      <textarea id="enc-result" readonly></textarea>
+      <button class="copybtn" onclick="copyText('enc-result')">Copy</button>
+    </div>
+  </div>
+
+  <div class="card" id="pane-dec" style="display:none">
+    <label>Encrypted text</label>
+    <textarea id="dec-in" rows="4" placeholder="Paste the encrypted text…"></textarea>
+    <label>Password</label>
+    <div class="pwrow">
+      <input type="password" id="dec-pw" placeholder="The password used to encrypt">
+      <button onclick="togglePw('dec-pw', this)">show</button>
+    </div>
+    <button class="btn" id="dec-btn" onclick="doDecrypt()">Decrypt →</button>
+    <div class="out" id="dec-out">
+      <label>Decrypted</label>
+      <textarea id="dec-result" readonly></textarea>
+      <button class="copybtn" onclick="copyText('dec-result')">Copy</button>
+    </div>
+  </div>
+
+  <div class="msg" id="msg"></div>
+
+  <footer>
+    <code>AES-256-GCM</code> · key derived with <code>PBKDF2-SHA256 (600,000 iterations)</code> · random salt &amp; IV per message.<br>
+    No server, no tracking, no database. Forget the password and the text is gone forever — that's the point.
+  </footer>
+</div>
+
+<script>
+const enc = new TextEncoder(), dec = new TextDecoder();
+const PREFIX = "cipher1.";
+
+function switchTab(which) {
+  document.getElementById('tab-enc').classList.toggle('active', which === 'enc');
+  document.getElementById('tab-dec').classList.toggle('active', which === 'dec');
+  document.getElementById('pane-enc').style.display = which === 'enc' ? 'block' : 'none';
+  document.getElementById('pane-dec').style.display = which === 'dec' ? 'block' : 'none';
+  setMsg('');
+}
+function togglePw(id, btn) {
+  const el = document.getElementById(id);
+  const show = el.type === 'password';
+  el.type = show ? 'text' : 'password';
+  btn.textContent = show ? 'hide' : 'show';
+}
+function setMsg(t, cls) {
+  const m = document.getElementById('msg');
+  m.textContent = t; m.className = 'msg' + (cls ? ' ' + cls : '');
+}
+function copyText(id) {
+  const el = document.getElementById(id);
+  el.select(); document.execCommand('copy');
+  setMsg('Copied to clipboard.', 'ok');
+}
+function b64e(buf) {
+  const b = new Uint8Array(buf); let s = '';
+  for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+  return btoa(s);
+}
+function b64d(s) {
+  const bin = atob(s); const b = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i);
+  return b.buffer;
+}
+async function deriveKey(password, salt) {
+  const base = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 600000, hash: 'SHA-256' },
+    base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+  );
+}
+async function doEncrypt() {
+  const text = document.getElementById('enc-in').value;
+  const pw = document.getElementById('enc-pw').value;
+  if (!text) return setMsg('Type something to encrypt first.', 'err');
+  if (!pw) return setMsg('Choose a password — it protects your text.', 'err');
+  const btn = document.getElementById('enc-btn');
+  btn.disabled = true; btn.textContent = 'Encrypting…';
+  try {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKey(pw, salt);
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(text));
+    const packed = new Uint8Array(16 + 12 + ct.byteLength);
+    packed.set(salt, 0); packed.set(iv, 16); packed.set(new Uint8Array(ct), 28);
+    document.getElementById('enc-result').value = PREFIX + b64e(packed.buffer);
+    document.getElementById('enc-out').classList.add('show');
+    setMsg('Encrypted. Only this password can unlock it.', 'ok');
+  } catch (e) { setMsg('Encryption failed: ' + e.message, 'err'); }
+  btn.disabled = false; btn.textContent = 'Encrypt →';
+}
+async function doDecrypt() {
+  let blob = document.getElementById('dec-in').value.trim();
+  const pw = document.getElementById('dec-pw').value;
+  if (!blob) return setMsg('Paste the encrypted text first.', 'err');
+  if (!pw) return setMsg('Enter the password used to encrypt.', 'err');
+  if (!blob.startsWith(PREFIX)) return setMsg('That doesn\u2019t look like a Cipher message.', 'err');
+  const btn = document.getElementById('dec-btn');
+  btn.disabled = true; btn.textContent = 'Decrypting…';
+  try {
+    const packed = new Uint8Array(b64d(blob.slice(PREFIX.length)));
+    const salt = packed.slice(0, 16), iv = packed.slice(16, 28), ct = packed.slice(28);
+    const key = await deriveKey(pw, salt);
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+    document.getElementById('dec-result').value = dec.decode(pt);
+    document.getElementById('dec-out').classList.add('show');
+    setMsg('Decrypted successfully.', 'ok');
+  } catch (e) { setMsg('Wrong password or corrupted text.', 'err'); }
+  btn.disabled = false; btn.textContent = 'Decrypt →';
+}
+</script>
+</body>
+</html>
