@@ -8,6 +8,8 @@ Only the password unlocks it. Nothing ever leaves your device.
 ## How it works
 
 - `AES-256-GCM` encryption via the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API)
+- On browsers without Web Crypto, the same math runs through the bundled
+  `forge` helper library in `app.js` — same passwords, same message format
 - Key derived with `PBKDF2-SHA256`, 600,000 iterations, random 16-byte salt
 - Random 12-byte IV per message — encrypting the same text twice gives different output
 - Output format: `cipher1.<base64(salt ‖ iv ‖ ciphertext)>`
@@ -20,7 +22,11 @@ No build step, no dependencies, no server. Works offline.
 
 ## Files
 
-- `index.html` — the entire app (markup + styles + crypto)
+- `index.html` — the page: all the text boxes, tabs and buttons you see
+- `styles.css` — the look: colors, sizes and layout
+- `app.js` — the brain: first the `forge` helper library (ready-made crypto
+  code, kept as-is), then our app's own code (tabs, encrypt, decrypt),
+  all commented in simple words
 
 ---
 

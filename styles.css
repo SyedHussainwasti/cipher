@@ -1,0 +1,387 @@
+/* The color palette for the whole page. Change a value here and it updates everywhere. */
+:root {
+  color-scheme: dark light;
+  --bg: #0b0f12;            /* page background */
+  --panel: #12181c;         /* the big card holding the tabs */
+  --field: #0e1316;         /* text boxes */
+  --line: #283238;          /* thin borders */
+  --line-strong: #3b484f;   /* stronger borders (hover) */
+  --text: #f1f4f2;          /* main text */
+  --muted: #9eaaa5;         /* grey helper text */
+  --accent: #a9f58f;        /* the green highlight color */
+  --accent-strong: #c8ffb6; /* brighter green (button hover) */
+  --accent-ink: #0b2504;    /* dark text on green buttons */
+  --danger: #ff8c82;        /* red for error messages */
+  --danger-bg: #261513;     /* dark red behind error messages */
+  --success: #b9f7a4;       /* green for success text */
+  --shadow: 0 26px 80px rgba(0,0,0,.32); /* soft shadow under the card */
+  --focus: rgba(169,245,143,.22);        /* glow ring on focused fields */
+}
+
+/* Slightly tweaked colors; the page stays dark in all cases. */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: dark;
+    --bg: #101518;
+    --panel: #182024;
+    --field: #12181b;
+    --line: #303b41;
+    --line-strong: #4a585f;
+    --text: #f5f7f5;
+    --muted: #acb7b1;
+    --accent: #b5f69f;
+    --accent-strong: #d0ffbf;
+    --accent-ink: #10260a;
+    --danger: #ff9a91;
+    --danger-bg: #2b1816;
+    --success: #c5f7b4;
+    --shadow: 0 26px 80px rgba(0,0,0,.28);
+    --focus: rgba(181,246,159,.22);
+  }
+}
+
+/* Reset: makes box sizing predictable on every element. */
+* { box-sizing: border-box; }
+
+/* Never let the page get narrower than a small phone. */
+html { min-width: 320px; }
+
+/* The page body: dark background with a faint grid pattern, readable font. */
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px),
+    var(--bg);
+  background-size: 32px 32px;
+  color: var(--text);
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Buttons and text boxes use the same font as the rest of the page. */
+button, textarea, input { font: inherit; }
+
+/* No grey flash when tapping buttons on phones. */
+button { -webkit-tap-highlight-color: transparent; }
+
+/* The centered column holding everything (max 780px wide). */
+.page {
+  width: min(100%, 780px);
+  margin: 0 auto;
+  padding: clamp(32px, 7vw, 72px) 20px max(42px, env(safe-area-inset-bottom));
+}
+
+/* Space below the title intro block. */
+.intro { margin-bottom: 26px; }
+
+/* The big "Encrypt a message." heading. */
+h1 {
+  margin: 0 0 10px;
+  max-width: 620px;
+  font-size: clamp(36px, 7vw, 64px);
+  line-height: .98;
+  letter-spacing: -.045em;
+  font-weight: 700;
+}
+
+/* The grey paragraph under the heading. */
+.intro p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.55;
+  max-width: 560px;
+}
+
+/* The main card containing the Encrypt/Decrypt tabs and forms. */
+.workbench {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+/* The tab bar (Encrypt | Decrypt) at the top of the card. */
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+
+/* One tab button. */
+.tab {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  min-height: 58px;
+  padding: 0 18px;
+  cursor: pointer;
+  font-weight: 600;
+  position: relative;
+}
+
+/* A thin divider between the two tabs. */
+.tab + .tab { border-left: 1px solid var(--line); }
+
+/* The currently open tab gets bright text. */
+.tab[aria-selected="true"] { color: var(--text); }
+
+/* The green underline marking the open tab. */
+.tab[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  height: 3px;
+  left: 17px;
+  right: 17px;
+  bottom: -1px;
+  background: var(--accent);
+}
+
+/* A visible glow ring when tabbing through controls with a keyboard. */
+.tab:focus-visible, button:focus-visible, textarea:focus-visible, input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* The content area below the tabs. */
+.panel { padding: clamp(20px, 5vw, 34px); }
+
+/* The hidden tab's panel is not shown at all. */
+.panel[hidden] { display: none; }
+
+/* Space between the message box, password box, and button. */
+.field { margin-bottom: 22px; }
+
+/* The small bold labels ("Message", "Password") with a note on the right. */
+label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* The tiny grey notes on the right of labels ("UTF-8 text", "not stored"). */
+.field-note {
+  color: var(--muted);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+/* The text boxes: dark fields with a thin border. */
+textarea, input[type="password"], input[type="text"] {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--field);
+  color: var(--text);
+  caret-color: var(--accent);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+/* Border gets brighter when hovering a text box. */
+textarea:hover, input:hover { border-color: var(--line-strong); }
+
+/* Green glow when a text box is focused for typing. */
+textarea:focus, input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus);
+  outline: none;
+}
+
+/* The big message box: tall, resizable vertically. */
+textarea {
+  min-height: 156px;
+  resize: vertical;
+  padding: 15px 16px;
+  line-height: 1.55;
+}
+
+/* The grey placeholder hints inside empty boxes. */
+textarea::placeholder, input::placeholder { color: var(--muted); opacity: .78; }
+
+/* Wrapper around the password box so the SHOW button can sit inside it. */
+.password-wrap { position: relative; }
+
+/* The password box leaves room on the right for the SHOW button. */
+.password-wrap input { height: 50px; padding: 0 76px 0 15px; }
+
+/* The small SHOW/HIDE button inside the password box. */
+.show-password {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  height: 40px;
+  border: 0;
+  padding: 0 10px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* The SHOW button brightens on hover. */
+.show-password:hover { color: var(--text); }
+
+/* The row with the green button and the status message next to it. */
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+/* The big green Encrypt/Decrypt button. */
+.primary {
+  min-height: 50px;
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-ink);
+  padding: 0 24px;
+  cursor: pointer;
+  font-weight: 700;
+  min-width: 150px;
+}
+
+/* Button gets brighter on hover. */
+.primary:hover { background: var(--accent-strong); }
+
+/* While working, the button looks faded and the cursor shows "busy". */
+.primary:disabled { cursor: wait; opacity: .65; }
+
+/* The small status line next to the button ("Encrypted successfully."). */
+.status {
+  min-height: 22px;
+  color: var(--muted);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Error messages: red text on a dark red background, full width. */
+.status.error {
+  width: 100%;
+  padding: 11px 12px;
+  color: var(--danger);
+  background: var(--danger-bg);
+  border: 1px solid color-mix(in srgb, var(--danger) 38%, transparent);
+}
+
+/* The result area (hidden until there is something to show). */
+.result {
+  display: none;
+  margin-top: 28px;
+  padding-top: 25px;
+  border-top: 1px solid var(--line);
+}
+
+/* Shown after a successful encrypt/decrypt. */
+.result.visible { display: block; }
+
+/* The row with "Encrypted — share or store this" and the Copy button. */
+.result-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 9px;
+}
+
+/* The small bold title above the result box. */
+.result-title { margin: 0; font-size: 13px; font-weight: 700; }
+
+/* The Copy button next to the result. */
+.copy {
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text);
+  min-height: 36px;
+  padding: 0 13px;
+  cursor: pointer;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* The Copy button turns green on hover. */
+.copy:hover { border-color: var(--accent); color: var(--accent); }
+
+/* The box showing the encrypted/decrypted text. Scrolls if very long. */
+.output {
+  margin: 0;
+  min-height: 92px;
+  max-height: 250px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  padding: 15px 16px;
+  background: var(--field);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.65;
+  user-select: text;
+}
+
+/* The three-column strip at the bottom: PBKDF2 · AES-256-GCM · random salt + IV. */
+.spec {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--line);
+  border-top: 0;
+  color: var(--muted);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+/* Each of the three spec cells. */
+.spec span { padding: 13px 16px; text-align: center; }
+
+/* Dividers between the spec cells. */
+.spec span + span { border-left: 1px solid var(--line); }
+
+/* The small privacy note at the very bottom of the page. */
+.privacy {
+  margin: 19px 2px 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+/* Bold words inside the privacy note. */
+.privacy strong { color: var(--text); font-weight: 600; }
+
+/* On small phones: tighter padding, full-width button, stacked spec strip. */
+@media (max-width: 560px) {
+  .page { padding-left: 14px; padding-right: 14px; }
+  .panel { padding: 21px 17px 24px; }
+  .field { margin-bottom: 19px; }
+  textarea { min-height: 142px; }
+  .action-row { align-items: stretch; }
+  .primary { width: 100%; }
+  .status { width: 100%; }
+  .spec { grid-template-columns: 1fr; }
+  .spec span { text-align: left; display: flex; justify-content: space-between; }
+  .spec span + span { border-left: 0; border-top: 1px solid var(--line); }
+  .spec span:nth-child(1)::before { content: "KDF"; color: var(--text); }
+  .spec span:nth-child(2)::before { content: "Cipher"; color: var(--text); }
+  .spec span:nth-child(3)::before { content: "Storage"; color: var(--text); }
+}
+
+/* If the user prefers no animation, turn off all transitions. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+}
